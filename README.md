@@ -3,15 +3,15 @@
 Projeto da disciplina **Programação de Sistemas para Web I** (IF Baiano – Campus Guanambi).
 Aplicação em PHP seguindo o padrão **MVC**, com template **Bootstrap 5**.
 
-> Preencher: nome do tema do projeto e breve descrição (uma ou duas frases).
+Tema: Educação Ambiental e Educação para consumo
 
 ## Equipe
 
-| Integrante | Responsabilidade principal |
-|---|---|
-| Integrante 1 – *(nome)* | Banco de dados e Models |
-| Integrante 2 – *(nome)* | Controllers, validação e rotas |
-| Integrante 3 – *(nome)* | Views, Bootstrap, CSS/JS e documentação |
+| Integrante |
+1- Pedro Amaral Fernandes
+2- Guilherme Moreira
+3- Vitor Gabriel
+
 
 ## Organização em MVC
 
