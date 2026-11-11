@@ -47,12 +47,19 @@ class UserController
 
         $input = [
             'name'  => trim($_POST['name'] ?? ''),
+            'last_name'  => trim($_POST['last_name'] ?? ''),
             'email' => trim($_POST['email'] ?? ''),
+            'cpf' => trim($_POST['cpf'] ?? '')
         ];
 
+        $cpf = preg_replace('/\D/', '', $input['cpf']);
+
         $errors = (new UserValidator())->validate($input);
-        if (!$errors &&  User::emailExists($input['email'])) {
+        if (!isset($errors['email']) && User::emailExists($input['email'])) {
             $errors['email'] = 'Este e-mail já está cadastrado.';
+        }
+        if (!isset($errors['cpf']) && User::cpfExists($cpf)) {
+            $errors['cpf'] = 'Este CPF já está cadastrado.';
         }
 
         if ($errors) {
@@ -66,7 +73,7 @@ class UserController
             return;
         }
 
-        User::create($input['name'], $input['email']);
+        User::create($input['name'], $input['last_name'], $input['email'], $cpf);
         header('Location: ' . url('user/index'));
         exit;
     }

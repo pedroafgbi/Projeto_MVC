@@ -1,2 +1,4 @@
-/* Ajustes sobre o Bootstrap (carregado antes deste arquivo). */
-.topo { background-color: #1f3864; }
+/* Ajustes do projeto sobre o tema Modern Business (carregado antes deste arquivo). */
+
+/* Campos com erro dentro de form-floating: espaço entre o campo e a mensagem. */
+.form-floating .erro { margin: 0.25rem 0 0; }

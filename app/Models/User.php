@@ -28,12 +28,20 @@ class User
         return (bool) $stmt->fetchColumn();
     }
 
-    public static function create(string $name, string $email): int
+        /** $cpf deve vir somente com os 11 dígitos. */
+    public static function cpfExists(string $cpf): bool
+    {
+        $stmt = Database::connect()->prepare('SELECT 1 FROM users WHERE cpf = ?');
+        $stmt->execute([$cpf]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    public static function create(string $name, string $last_name, string $email, int $cpf): int
     {
         $stmt = Database::connect()->prepare(
-            'INSERT INTO users (name, email) VALUES (?, ?)'
+            'INSERT INTO users (name, last_name, email, cpf) VALUES (?, ?, ?, ?)'
         );
-        $stmt->execute([$name, $email]);
+        $stmt->execute([$name, $last_name, $email, $cpf]);
         return (int) Database::connect()->lastInsertId();
     }
 }
