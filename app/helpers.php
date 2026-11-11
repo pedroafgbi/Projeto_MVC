@@ -19,3 +19,13 @@ function asset(string $path): string
     $version = is_file($file) ? filemtime($file) : false;
     return url($path) . ($version === false ? '' : '?v=' . $version);
 }
+
+function format_cpf(?string $cpf): string
+{
+    $cpf = (string) $cpf;
+    if (!preg_match('/^\d{11}$/', $cpf)) {
+        return $cpf;
+    }
+    return substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.'
+         . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
+}

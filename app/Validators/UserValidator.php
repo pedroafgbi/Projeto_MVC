@@ -37,6 +37,21 @@ class UserValidator
             $errors['cpf'] = 'Informe um CPF válido.';
         }
 
+                $birth = $input['birth_date'] ?? '';
+        if (!is_string($birth) || trim($birth) === '') {
+            $errors['birth_date'] = 'Informe a data de nascimento.';
+            
+        } else {
+            $data = \DateTime::createFromFormat('!Y-m-d', $birth);
+            if (!$data || $data->format('Y-m-d') !== $birth) {
+                $errors['birth_date'] = 'Informe uma data de nascimento válida.';
+            } elseif ($data > new \DateTime('today')) {
+                $errors['birth_date'] = 'A data de nascimento não pode ser no futuro.';
+            } elseif ($data < new \DateTime('1900-01-01')) {
+                $errors['birth_date'] = 'Informe uma data a partir de 1900.';
+            }
+        }
+
         return $errors;
     }
 

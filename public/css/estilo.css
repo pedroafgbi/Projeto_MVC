@@ -2,3 +2,13 @@
 
 /* Campos com erro dentro de form-floating: espaço entre o campo e a mensagem. */
 .form-floating .erro { margin: 0.25rem 0 0; }
+
+/* Campo de data dentro de form-floating: rótulo sempre no alto. */
+.form-floating > input[type="date"] {
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+}
+.form-floating > input[type="date"] ~ label {
+    opacity: 0.65;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}

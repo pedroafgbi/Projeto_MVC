@@ -37,7 +37,7 @@ class UserController
         ]);
     }
 
-    public function store(): void
+        public function store(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
@@ -46,12 +46,13 @@ class UserController
         $this->checkCsrf();
 
         $input = [
-            'name'  => trim($_POST['name'] ?? ''),
+            'name'       => trim($_POST['name'] ?? ''),
             'last_name'  => trim($_POST['last_name'] ?? ''),
-            'email' => trim($_POST['email'] ?? ''),
-            'cpf' => trim($_POST['cpf'] ?? '')
+            'email'      => trim($_POST['email'] ?? ''),
+            'cpf'        => trim($_POST['cpf'] ?? ''),
+            'birth_date' => trim($_POST['birth_date'] ?? ''),
         ];
-
+        // No banco o CPF é guardado só com os dígitos.
         $cpf = preg_replace('/\D/', '', $input['cpf']);
 
         $errors = (new UserValidator())->validate($input);
@@ -73,7 +74,13 @@ class UserController
             return;
         }
 
-        User::create($input['name'], $input['last_name'], $input['email'], $cpf);
+        User::create(
+            $input['name'],
+            $input['last_name'],
+            $input['email'],
+            $cpf,
+            $input['birth_date']
+        );
         header('Location: ' . url('user/index'));
         exit;
     }

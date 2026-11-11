@@ -22,6 +22,8 @@
                         <tr>
                             <th scope="col" class="ps-4">Nome</th>
                             <th scope="col">E-mail</th>
+                            <th scope="col">CPF</th>
+                            <th scope="col">Nascimento</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -30,15 +32,21 @@
                             <td class="ps-4">
                                 <a class="fw-bold text-decoration-none"
                                    href="<?= e(url('user/show/' . (int) $u['id'])) ?>">
-                                    <?= e($u['name']) ?>
+                                    <?= e(trim($u['name'] . ' ' . ($u['last_name'] ?? ''))) ?>
                                 </a>
                             </td>
                             <td><?= e($u['email']) ?></td>
+                            <td><?= e(format_cpf($u['cpf'] ?? '')) ?></td>
+                            <td>
+                                <?= !empty($u['birth_date'])
+                                    ? e(date('d/m/Y', strtotime($u['birth_date'])))
+                                    : '&mdash;' ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if (!$users): ?>
                         <tr>
-                            <td colspan="2" class="text-center text-muted py-4">
+                            <td colspan="4" class="text-center text-muted py-4">
                                 Nenhum usuário cadastrado.
                             </td>
                         </tr>

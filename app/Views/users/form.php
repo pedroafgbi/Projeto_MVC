@@ -58,6 +58,17 @@
                             <?php endif; ?>
                         </div>
 
+                        <div class="form-floating mb-3">
+                            <input id="birth_date" name="birth_date" type="date" required
+                                   min="1900-01-01" max="<?= e(date('Y-m-d')) ?>"
+                                   class="form-control<?= isset($errors['birth_date']) ? ' is-invalid' : '' ?>"
+                                   value="<?= e($old['birth_date'] ?? '') ?>">
+                            <label for="birth_date">Data de nascimento</label>
+                            <?php if (isset($errors['birth_date'])): ?>
+                                <p class="erro invalid-feedback d-block"><?= e($errors['birth_date']) ?></p>
+                            <?php endif; ?>
+                        </div>
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">Salvar</button>
                         </div>
