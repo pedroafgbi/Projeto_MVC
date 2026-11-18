@@ -19,7 +19,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container px-5">
                 <a class="navbar-brand d-flex align-items-center gap-2"
-                   href="<?= e(url('user/index')) ?>">
+                   href="<?= e(url('home/index')) ?>">
                     <img src="<?= e(asset('img/logo.png')) ?>" alt="Logo do projeto"
                          width="32" height="32">
                     Projeto MVC
@@ -32,6 +32,9 @@
                 </button>
                 <div class="collapse navbar-collapse" id="menu">
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= e(url('home/index')) ?>">Início</a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="<?= e(url('user/index')) ?>">Usuários</a>
                         </li>

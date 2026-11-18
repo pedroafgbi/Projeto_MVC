@@ -1,25 +1,14 @@
 <?php
 namespace App\Controllers;
 
-use App\Models\User;
-use App\Validators\UserValidator;
-
 class HomeController
 {
-    
-    private function csrfToken(): string
+    /** Página principal (rota padrão: abre ao entrar no localhost). */
+    public function index(): void
     {
-        session_status() === PHP_SESSION_NONE && session_start();
-        return $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
-    }
-
-    private function checkCsrf(): void
-    {
-        session_status() === PHP_SESSION_NONE && session_start();
-        if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
-            http_response_code(403);
-            exit('Token inválido');
-        }
+        $this->render('home/index', [
+            'title' => 'Início',
+        ]);
     }
 
     private function render(string $view, array $data = []): void
@@ -35,6 +24,6 @@ class HomeController
 
         $content = $renderFile($base . $view . '.php', $data);
         $vars = $data + ['content' => $content];
-        echo $renderFile($base . 'layouts/main.php', $vars);
+        echo $renderFile($base . 'layouts/home.php', $vars);
     }
 }
