@@ -120,4 +120,16 @@ class User
         );
         $stmt->execute([$active ? 1 : 0, $id]);
     }
+
+    public static function isAdmin(int $id): bool
+{
+    $stmt = Database::connect()->prepare(
+        "SELECT role FROM users
+         WHERE id_user = ? AND active = 1"
+    );
+
+    $stmt->execute([$id]);
+
+    return $stmt->fetchColumn() === 'admin';
+    }
 }

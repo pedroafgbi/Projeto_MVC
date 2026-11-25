@@ -16,6 +16,10 @@ session_set_cookie_params([
 ]);
 session_start();
 
+if (empty($_SESSION['csrf'])) {
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+}
+
 // 1) Autoload
 spl_autoload_register(function (string $class) {
     $file = __DIR__ . '/../app/'

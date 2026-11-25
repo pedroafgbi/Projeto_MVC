@@ -110,7 +110,7 @@ class UserController
 
     public function edit(string $id = ''): void
     {
-        $user = $this->findOwnedOr404($id, true);
+        $user = $this->findOwnedOr404($id, true); 
 
         $old = [
             'name'       => $user['name'],
