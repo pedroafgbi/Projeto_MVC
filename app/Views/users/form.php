@@ -3,15 +3,15 @@
         <div class="bg-light rounded-3 py-5 px-4 px-md-5 mb-5">
             <div class="text-center mb-5">
                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3">
-                    <i class="bi bi-person-plus"></i>
+                    <i class="bi <?= $editing ? 'bi-pencil-square' : 'bi-person-plus' ?>"></i>
                 </div>
                 <h1 class="fw-bolder"><?= e($title) ?></h1>
-                <p class="lead fw-normal text-muted mb-0">Preencha os dados para cadastrar</p>
+                <p class="lead fw-normal text-muted mb-0"><?= e($subtitle) ?></p>
             </div>
 
             <div class="row gx-5 justify-content-center">
                 <div class="col-lg-8 col-xl-6">
-                    <form method="post" action="<?= e(url('user/store')) ?>" data-validate>
+                    <form method="post" action="<?= e(url($action)) ?>" data-validate>
                         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
 
                         <div class="form-floating mb-3">
@@ -69,8 +69,40 @@
                             <?php endif; ?>
                         </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">Salvar</button>
+                        <div class="form-floating mb-3">
+                            <input id="password" name="password" type="password"
+                                   <?= $editing ? '' : 'required' ?> minlength="8" maxlength="72"
+                                   placeholder="Senha" autocomplete="new-password"
+                                   class="form-control<?= isset($errors['password']) ? ' is-invalid' : '' ?>">
+                            <label for="password"><?= $editing ? 'Nova senha (opcional)' : 'Senha' ?></label>
+                            <?php if (isset($errors['password'])): ?>
+                                <p class="erro invalid-feedback d-block"><?= e($errors['password']) ?></p>
+                            <?php endif; ?>
+                            <div class="form-text">
+                                <?= $editing
+                                    ? 'Deixe em branco para manter a senha atual. Mínimo de 8 caracteres.'
+                                    : 'Mínimo de 8 caracteres.' ?>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input id="password_confirm" name="password_confirm" type="password"
+                                   minlength="8" maxlength="72"
+                                   placeholder="Confirmar senha" autocomplete="new-password"
+                                   class="form-control<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>">
+                            <label for="password_confirm">Confirmar senha</label>
+                            <?php if (isset($errors['password_confirm'])): ?>
+                                <p class="erro invalid-feedback d-block"><?= e($errors['password_confirm']) ?></p>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <?= $editing ? 'Salvar alterações' : 'Salvar' ?>
+                            </button>
+                            <?php if ($editing): ?>
+                                <a href="<?= e(url('user/index')) ?>" class="btn btn-outline-secondary">Cancelar</a>
+                            <?php endif; ?>
                         </div>
                     </form>
                 </div>

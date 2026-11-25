@@ -6,71 +6,57 @@ use App\Validators\UserValidator;
 
 class UserController
 {
+    /** Lista de usuários. Use ?status=inativos para ver os inativos. */
     public function index(): void
     {
-	
-        $this->render('users/index', [
-            'title' => 'Usuários',
-            'users' => User::all(),
-        ]);
-    }
-    public function show(string $id = ''): void
-    {
-        $user =  User::find((int) $id);
-        if (!$user) {
-            http_response_code(404);
-            exit('Usuário não encontrado');
-        }
-        $this->render('users/index', [
-            'title' => 'Usuário',
-            'users' => [$user],
-        ]);
-    }
+        $inactive = ($_GET['status'] ?? '') === 'inativos';
 
-    public function create(): void
-    {
-        $this->render('users/form', [
-            'title'  => 'Novo usuário',
-            'errors' => [],
-            'old'    => [],
+        $this->render('users/index', [
+            'title'  => $inactive ? 'Usuários inativos' : 'Usuários',
+            'users'  => User::all(!$inactive),
+            'status' => $inactive ? 'inativos' : 'ativos',
+            'single' => false,
+            'flash'  => $this->takeFlash(),
             'csrf'   => $this->csrfToken(),
         ]);
     }
 
-        public function store(): void
+    public function show(string $id = ''): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            exit('Método não permitido');
-        }
+        $user = $this->findOr404($id);
+
+        $this->render('users/index', [
+            'title'  => 'Usuário',
+            'users'  => [$user],
+            'status' => (int) $user['active'] === 1 ? 'ativos' : 'inativos',
+            'single' => true,
+            'flash'  => null,
+            'csrf'   => $this->csrfToken(),
+        ]);
+    }
+
+    /* ---------- Cadastro ---------- */
+
+    public function create(): void
+    {
+        $this->renderForm([], []);
+    }
+
+    public function store(): void
+    {
+        $this->requirePost();
         $this->checkCsrf();
 
-        $input = [
-            'name'       => trim($_POST['name'] ?? ''),
-            'last_name'  => trim($_POST['last_name'] ?? ''),
-            'email'      => trim($_POST['email'] ?? ''),
-            'cpf'        => trim($_POST['cpf'] ?? ''),
-            'birth_date' => trim($_POST['birth_date'] ?? ''),
-        ];
+        $input = $this->readInput();
         // No banco o CPF é guardado só com os dígitos.
         $cpf = preg_replace('/\D/', '', $input['cpf']);
 
         $errors = (new UserValidator())->validate($input);
-        if (!isset($errors['email']) && User::emailExists($input['email'])) {
-            $errors['email'] = 'Este e-mail já está cadastrado.';
-        }
-        if (!isset($errors['cpf']) && User::cpfExists($cpf)) {
-            $errors['cpf'] = 'Este CPF já está cadastrado.';
-        }
+        $errors = $this->checkDuplicates($errors, $input, $cpf);
 
         if ($errors) {
             http_response_code(422);
-            $this->render('users/form', [
-                'title'  => 'Novo usuário',
-                'errors' => $errors,
-                'old'    => $input,
-                'csrf'   => $this->csrfToken(),
-            ]);
+            $this->renderForm($this->withoutPasswords($input), $errors);
             return;
         }
 
@@ -79,22 +65,200 @@ class UserController
             $input['last_name'],
             $input['email'],
             $cpf,
+            $input['birth_date'],
+            password_hash($input['password'], PASSWORD_DEFAULT)
+        );
+        $this->flash('Usuário cadastrado com sucesso.');
+        $this->redirect('user/index');
+    }
+
+    /* ---------- Edição ---------- */
+
+    public function edit(string $id = ''): void
+    {
+        $user = $this->findOr404($id, true);
+
+        $old = [
+            'name'       => $user['name'],
+            'last_name'  => $user['last_name'],
+            'email'      => $user['email'],
+            'cpf'        => format_cpf($user['cpf']),
+            'birth_date' => $user['birth_date'],
+        ];
+        $this->renderForm($old, [], $user);
+    }
+
+    public function update(string $id = ''): void
+    {
+        $this->requirePost();
+        $this->checkCsrf();
+
+        $user = $this->findOr404($id, true);
+        $userId = (int) $user['id_user'];
+
+        $input = $this->readInput();
+        $cpf = preg_replace('/\D/', '', $input['cpf']);
+
+        // Senha em branco = mantém a atual.
+        $errors = (new UserValidator())->validate($input, false);
+        $errors = $this->checkDuplicates($errors, $input, $cpf, $userId);
+
+        if ($errors) {
+            http_response_code(422);
+            $this->renderForm($this->withoutPasswords($input), $errors, $user);
+            return;
+        }
+
+        User::update(
+            $userId,
+            $input['name'],
+            $input['last_name'],
+            $input['email'],
+            $cpf,
             $input['birth_date']
         );
-        header('Location: ' . url('user/index'));
+        if ($input['password'] !== '') {
+            User::updatePassword($userId, password_hash($input['password'], PASSWORD_DEFAULT));
+        }
+
+        $this->flash('Dados atualizados com sucesso.');
+        $this->redirect('user/index');
+    }
+
+    /* ---------- Inativar / reativar ---------- */
+
+    public function inactivate(string $id = ''): void
+    {
+        $this->requirePost();
+        $this->checkCsrf();
+
+        $user = $this->findOr404($id);
+        User::setActive((int) $user['id_user'], false);
+
+        $this->flash('Usuário inativado.');
+        $this->redirect('user/index');
+    }
+
+    public function activate(string $id = ''): void
+    {
+        $this->requirePost();
+        $this->checkCsrf();
+
+        $user = $this->findOr404($id);
+        User::setActive((int) $user['id_user'], true);
+
+        $this->flash('Usuário reativado.');
+        $this->redirect('user/index');
+    }
+
+    /* ---------- Apoio (privados) ---------- */
+
+    private function requirePost(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit('Método não permitido');
+        }
+    }
+
+    /** Busca o usuário; 404 se não existir; 403 se inativo e $mustBeActive. */
+    private function findOr404(string $id, bool $mustBeActive = false): array
+    {
+        $user = User::find((int) $id);
+        if (!$user) {
+            http_response_code(404);
+            exit('Usuário não encontrado');
+        }
+        if ($mustBeActive && (int) $user['active'] !== 1) {
+            http_response_code(403);
+            exit('Usuário inativo. Reative-o para editar.');
+        }
+        return $user;
+    }
+
+    private function readInput(): array
+    {
+        return [
+            'name'             => trim($_POST['name'] ?? ''),
+            'last_name'        => trim($_POST['last_name'] ?? ''),
+            'email'            => trim($_POST['email'] ?? ''),
+            'cpf'              => trim($_POST['cpf'] ?? ''),
+            'birth_date'       => trim($_POST['birth_date'] ?? ''),
+            'password'         => $_POST['password'] ?? '',
+            'password_confirm' => $_POST['password_confirm'] ?? '',
+        ];
+    }
+
+    /** Nunca devolve a senha para o formulário. */
+    private function withoutPasswords(array $input): array
+    {
+        unset($input['password'], $input['password_confirm']);
+        return $input;
+    }
+
+    /** Confere e-mail e CPF repetidos (na edição, ignora o próprio usuário). */
+    private function checkDuplicates(array $errors, array $input, string $cpf, int $ignoreId = 0): array
+    {
+        if (!isset($errors['email']) && User::emailExists($input['email'], $ignoreId)) {
+            $errors['email'] = 'Este e-mail já está cadastrado.';
+        }
+        if (!isset($errors['cpf']) && User::cpfExists($cpf, $ignoreId)) {
+            $errors['cpf'] = 'Este CPF já está cadastrado.';
+        }
+        return $errors;
+    }
+
+    private function renderForm(array $old, array $errors, ?array $editing = null): void
+    {
+        $this->render('users/form', [
+            'title'    => $editing ? 'Editar usuário' : 'Novo usuário',
+            'subtitle' => $editing ? 'Altere os dados e salve' : 'Preencha os dados para cadastrar',
+            'action'   => $editing ? 'user/update/' . (int) $editing['id_user'] : 'user/store',
+            'editing'  => $editing !== null,
+            'errors'   => $errors,
+            'old'      => $old,
+            'csrf'     => $this->csrfToken(),
+        ]);
+    }
+
+    private function redirect(string $path): void
+    {
+        header('Location: ' . url($path));
         exit;
+    }
+
+    private function startSession(): void
+    {
+        session_status() === PHP_SESSION_NONE && session_start();
+    }
+
+    /** Guarda uma mensagem para a próxima tela. */
+    private function flash(string $message): void
+    {
+        $this->startSession();
+        $_SESSION['flash'] = $message;
+    }
+
+    /** Lê e apaga a mensagem guardada. */
+    private function takeFlash(): ?string
+    {
+        $this->startSession();
+        $message = $_SESSION['flash'] ?? null;
+        unset($_SESSION['flash']);
+        return $message;
     }
 
     private function csrfToken(): string
     {
-        session_status() === PHP_SESSION_NONE && session_start();
+        $this->startSession();
         return $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
     }
 
     private function checkCsrf(): void
     {
-        session_status() === PHP_SESSION_NONE && session_start();
-        if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
+        $this->startSession();
+        $token = $_POST['csrf'] ?? '';
+        if (!is_string($token) || !hash_equals($_SESSION['csrf'] ?? '', $token)) {
             http_response_code(403);
             exit('Token inválido');
         }

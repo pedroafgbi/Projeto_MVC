@@ -6,7 +6,7 @@
                 <p class="lead fw-normal text-muted mb-0">Pessoas cadastradas no sistema</p>
             </div>
             <div class="d-flex gap-2">
-                <?php if (count($users) === 1): ?>
+                <?php if ($single): ?>
                     <a href="<?= e(url('user/index')) ?>" class="btn btn-outline-secondary">Ver todos</a>
                 <?php endif; ?>
                 <a href="<?= e(url('user/create')) ?>" class="btn btn-primary">
@@ -14,6 +14,23 @@
                 </a>
             </div>
         </div>
+
+        <?php if (!empty($flash)): ?>
+            <div class="alert alert-success" role="alert"><?= e($flash) ?></div>
+        <?php endif; ?>
+
+        <?php if (!$single): ?>
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item">
+                    <a class="nav-link<?= $status === 'ativos' ? ' active' : '' ?>"
+                       href="<?= e(url('user/index')) ?>">Ativos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link<?= $status === 'inativos' ? ' active' : '' ?>"
+                       href="<?= e(url('user/index?status=inativos')) ?>">Inativos</a>
+                </li>
+            </ul>
+        <?php endif; ?>
 
         <div class="card shadow border-0 rounded-3">
             <div class="table-responsive">
@@ -24,16 +41,21 @@
                             <th scope="col">E-mail</th>
                             <th scope="col">CPF</th>
                             <th scope="col">Nascimento</th>
+                            <th scope="col" class="text-end pe-4">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php foreach ($users as $u): ?>
+                        <?php $uid = (int) $u['id_user']; ?>
                         <tr>
                             <td class="ps-4">
                                 <a class="fw-bold text-decoration-none"
-                                   href="<?= e(url('user/show/' . (int) $u['id'])) ?>">
+                                   href="<?= e(url('user/show/' . $uid)) ?>">
                                     <?= e(trim($u['name'] . ' ' . ($u['last_name'] ?? ''))) ?>
                                 </a>
+                                <?php if ((int) $u['active'] !== 1): ?>
+                                    <span class="badge bg-secondary ms-1">inativo</span>
+                                <?php endif; ?>
                             </td>
                             <td><?= e($u['email']) ?></td>
                             <td><?= e(format_cpf($u['cpf'] ?? '')) ?></td>
@@ -42,12 +64,30 @@
                                     ? e(date('d/m/Y', strtotime($u['birth_date'])))
                                     : '&mdash;' ?>
                             </td>
+                            <td class="text-end pe-4 text-nowrap">
+                                <?php if ((int) $u['active'] === 1): ?>
+                                    <a href="<?= e(url('user/edit/' . $uid)) ?>"
+                                       class="btn btn-sm btn-outline-primary">Editar</a>
+                                    <form method="post" class="d-inline"
+                                          action="<?= e(url('user/inactivate/' . $uid)) ?>"
+                                          onsubmit="return confirm('Inativar este usuário? Ele deixará de aparecer na lista de ativos.');">
+                                        <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Inativar</button>
+                                    </form>
+                                <?php else: ?>
+                                    <form method="post" class="d-inline"
+                                          action="<?= e(url('user/activate/' . $uid)) ?>">
+                                        <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Reativar</button>
+                                    </form>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if (!$users): ?>
                         <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
-                                Nenhum usuário cadastrado.
+                            <td colspan="5" class="text-center text-muted py-4">
+                                Nenhum usuário <?= $status === 'inativos' ? 'inativo' : 'ativo' ?>.
                             </td>
                         </tr>
                     <?php endif; ?>
