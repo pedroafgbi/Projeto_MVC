@@ -1,6 +1,8 @@
 <?php
 namespace App\Controllers;
 
+use App\Models\Quiz;
+
 class HomeController
 {
     /** Página principal (rota padrão: abre ao entrar no localhost). */
@@ -8,6 +10,7 @@ class HomeController
     {
         $this->render('home/index', [
             'title' => 'Início',
+            'quizzes' => Quiz::allWithContent(),
         ]);
     }
 

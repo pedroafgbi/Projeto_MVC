@@ -1,6 +1,6 @@
-<section class="py-5">
+<section class="py-5 login-page">
     <div class="container px-5">
-        <div class="bg-light rounded-3 py-5 px-4 px-md-5 mb-5">
+        <div class="login-panel rounded-3 py-5 px-4 px-md-5">
             <div class="text-center mb-5">
                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3">
                     <i class="bi bi-box-arrow-in-right"></i>

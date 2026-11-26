@@ -11,9 +11,7 @@
                         Aprenda como as nossas escolhas do dia a dia afetam o meio ambiente
                         e descubra hábitos mais sustentáveis.
                     </p>
-                    <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                        <a class="btn btn-primary btn-lg px-4 me-sm-3"
-                           href="<?= e(url('user/profile')) ?>">Meu perfil</a>
+                    <div class="d-flex justify-content-center">
                         <a class="btn btn-outline-light btn-lg px-4" href="#sobre">Saiba mais</a>
                     </div>
                 </div>
@@ -77,20 +75,95 @@
     </div>
 </section>
 
-<!-- Chamada para ação -->
-<section class="pb-5">
-    <div class="container px-5 mb-5">
-        <aside class="bg-primary bg-gradient rounded-3 p-4 p-sm-5">
-            <div class="d-flex align-items-center justify-content-between flex-column flex-xl-row text-center text-xl-start">
-                <div class="mb-4 mb-xl-0">
-                    <div class="fs-3 fw-bold text-white">Faça parte do projeto.</div>
-                    <div class="text-white-50">Acesse e atualize suas informações de cadastro.</div>
-                </div>
-                <div class="ms-xl-4">
-                    <a class="btn btn-outline-light btn-lg px-4"
-                       href="<?= e(url('user/profile')) ?>">Acessar meu perfil</a>
-                </div>
+<!-- Quizzes -->
+<section class="py-5" id="quizzes">
+    <div class="container px-5">
+        <h2 class="fw-bold mb-4">Quizzes</h2>
+
+        <?php if (empty($quizzes)): ?>
+            <p class="text-muted">Nenhum quiz disponível no momento.</p>
+        <?php else: ?>
+            <div class="row g-4">
+                <?php foreach ($quizzes as $quiz): ?>
+                    <div class="col-12">
+                        <article class="card shadow-sm quiz-card">
+                            <div class="card-body p-4">
+                                <h3 class="h4 fw-bold">
+                                    <?= e($quiz['titulo']) ?>
+                                </h3>
+
+                                <?php if (!empty($quiz['descricao'])): ?>
+                                    <p class="text-muted">
+                                        <?= e($quiz['descricao']) ?>
+                                    </p>
+                                <?php endif; ?>
+
+                                <?php if (!empty($quiz['perguntas'])): ?>
+                                    <div class="quiz-intro">
+                                        <p>
+                                            <?= count($quiz['perguntas']) ?>
+                                            <?= count($quiz['perguntas']) === 1 ? 'pergunta' : 'perguntas' ?>
+                                        </p>
+                                        <button type="button"
+                                                class="btn btn-primary quiz-start">
+                                            Iniciar Quiz
+                                        </button>
+                                    </div>
+
+                                    <div class="quiz-play" hidden>
+                                        <p class="quiz-progress text-muted"
+                                           aria-live="polite"></p>
+
+                                        <ol class="quiz-questions">
+                                            <?php foreach ($quiz['perguntas'] as $index => $pergunta): ?>
+                                                <li class="quiz-question"
+                                                    <?= $index === 0 ? '' : 'hidden' ?>>
+                                                    <fieldset>
+                                                        <legend class="h5 fw-bold">
+                                                            <?= e($pergunta['enunciado']) ?>
+                                                        </legend>
+
+                                                        <?php foreach ($pergunta['alternativas'] as $alternativaIndex => $alternativa): ?>
+                                                            <label class="form-check mb-2">
+                                                                <input class="form-check-input"
+                                                                       type="radio"
+                                                                       name="quiz-<?= e($quiz['id_quiz']) ?>-pergunta-<?= $index ?>"
+                                                                       data-correct="<?= $alternativa['correta'] ? '1' : '0' ?>">
+                                                                <span class="form-check-label">
+                                                                    <?= e($alternativa['texto']) ?>
+                                                                </span>
+                                                            </label>
+                                                        <?php endforeach; ?>
+                                                    </fieldset>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ol>
+
+                                        <p class="quiz-feedback"
+                                           aria-live="polite"></p>
+                                        <button type="button"
+                                                class="btn btn-success quiz-next"
+                                                disabled>
+                                            Responder
+                                        </button>
+                                    </div>
+
+                                    <div class="quiz-result" aria-live="polite" hidden>
+                                        <h4 class="h5 fw-bold">Quiz finalizado!</h4>
+                                        <p class="quiz-score"></p>
+                                        <button type="button"
+                                                class="btn btn-outline-primary quiz-restart">
+                                            Refazer Quiz
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </article>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        </aside>
+        <?php endif; ?>
     </div>
 </section>
+
+<script src="<?= e(asset('js/quiz.js')) ?>" defer></script>

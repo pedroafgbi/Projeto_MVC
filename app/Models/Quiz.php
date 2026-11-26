@@ -17,6 +17,61 @@ class Quiz
         return Database::connect()->query($sql)->fetchAll();
     }
 
+    public static function allWithContent(): array
+    {
+        $sql = "SELECT q.id_quiz, q.titulo, q.descricao,
+                       p.id_pergunta, p.enunciado,
+                       a.id_alternativa, a.texto, a.correta
+                FROM quiz q
+                LEFT JOIN perguntas p ON p.id_quiz = q.id_quiz
+                LEFT JOIN alternativas a ON a.id_pergunta = p.id_pergunta
+                ORDER BY q.id_quiz DESC, p.id_pergunta, a.id_alternativa";
+
+        $rows = Database::connect()->query($sql)->fetchAll();
+        $quizzes = [];
+
+        foreach ($rows as $row) {
+            $quizId = (int) $row['id_quiz'];
+
+            if (!isset($quizzes[$quizId])) {
+                $quizzes[$quizId] = [
+                    'id_quiz' => $quizId,
+                    'titulo' => $row['titulo'],
+                    'descricao' => $row['descricao'],
+                    'perguntas' => [],
+                ];
+            }
+
+            if ($row['id_pergunta'] === null) {
+                continue;
+            }
+
+            $perguntaId = (int) $row['id_pergunta'];
+
+            if (!isset($quizzes[$quizId]['perguntas'][$perguntaId])) {
+                $quizzes[$quizId]['perguntas'][$perguntaId] = [
+                    'enunciado' => $row['enunciado'],
+                    'alternativas' => [],
+                ];
+            }
+
+            if ($row['id_alternativa'] !== null) {
+                $quizzes[$quizId]['perguntas'][$perguntaId]['alternativas'][] =
+                    [
+                        'texto' => $row['texto'],
+                        'correta' => (bool) $row['correta'],
+                    ];
+            }
+        }
+
+        foreach ($quizzes as &$quiz) {
+            $quiz['perguntas'] = array_values($quiz['perguntas']);
+        }
+        unset($quiz);
+
+        return array_values($quizzes);
+    }
+
     public static function find(int $id): ?array
     {
         $db = Database::connect();
